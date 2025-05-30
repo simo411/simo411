@@ -1,0 +1,32 @@
+FROM python:3.11-slim-bookworm
+
+# RMR setup
+RUN mkdir -p /opt/route/
+
+# sdl uses hiredis which needs gcc
+RUN apt update && apt install -y gcc musl-dev && apt install -y wget
+# copy rmr libraries from builder image in lieu of an Alpine package
+ARG RMRVERSION=4.9.0
+RUN wget --content-disposition https://packagecloud.io/o-ran-sc/release/packages/debian/stretch/rmr_${RMRVERSION}_amd64.deb/download.deb && dpkg -i rmr_${RMRVERSION}_amd64.deb
+RUN wget --content-disposition https://packagecloud.io/o-ran-sc/release/packages/debian/stretch/rmr-dev_${RMRVERSION}_amd64.deb/download.deb && dpkg -i rmr-dev_${RMRVERSION}_amd64.deb
+RUN rm -f rmr_${RMRVERSION}_amd64.deb rmr-dev_${RMRVERSION}_amd64.deb
+
+ENV LD_LIBRARY_PATH /usr/local/lib/:/usr/local/lib64
+COPY local.rt /opt/route/local.rt
+ENV RMR_SEED_RT /opt/route/local.rt
+
+# Install
+COPY setup.py /tmp
+COPY xapp-descriptor/config.json /tmp
+
+COPY LICENSE.txt /tmp/
+RUN pip install /tmp
+#RUN pip3 install --extra-index-url https://pypi.nvidia.com tensorrt-bindings==8.6.1 tensorrt-libs==8.6.1 &&\
+#    pip3 install torch
+RUN pip3 install --upgrade requests
+
+# Run
+ENV PYTHONUNBUFFERED 1
+ENV CONFIG_FILE=/tmp/config.json
+COPY src/ /src
+CMD PYTHONPATH=/src:/usr/lib/python3.11/site-packages/:$PYTHONPATH run-lp.py
