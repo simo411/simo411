@@ -1,0 +1,49 @@
+{
+    "xapp_name": "lp",
+    "version": "1.0.0",
+    "containers": [
+        {
+            "name": "lp",
+            "image": {
+                "registry": "nexus3.o-ran-sc.org:10002",
+                "name": "oran-ric/lp",
+                "tag": "0.0.1"
+            }
+        }
+    ],
+    "messaging": {
+        "ports": [
+            {
+                "name": "rmr-data",
+                "container": "lp",
+                "port": 4560,
+                "rxMessages": [
+                    "KPIMON_CELL_LIST"
+                ],
+                "txMessages": [
+                    "GeoLP_Cell_LIST"
+                ],
+                "policies": [],
+                "description": "rmr receive data port for lp"
+            },
+            {
+                "name": "rmr-route",
+                "container": "lp",
+                "port": 4561,
+                "description": "rmr route port for lp"
+            }
+        ]
+    },
+    "rmr": {
+        "protPort": "tcp:4560",
+        "maxSize": 2072,
+        "numWorkers": 1,
+        "rxMessages": [
+            "KPIMON_CELL_LIST"
+        ],
+        "txMessages": [
+            "GeoLP_Cell_LIST"
+        ],
+        "policies": []
+    }
+}
